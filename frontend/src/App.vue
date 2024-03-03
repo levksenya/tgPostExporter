@@ -14,6 +14,18 @@
         <input type="text" id="defaultNotes" v-model="settingsStore.defaultNotes" />
       </div>
       <Notes />
+      <details class="blacklistDetails">
+        <summary>Черный список</summary>
+        <!-- <label for="blacklist">Черный список</label>  -->
+        <textarea class="blacklist"
+            @input="
+              (e)=>{
+                isSettingsSaving = true
+                settingsStore.blacklist = e.target.value
+              }
+            "
+        >{{ settingsStore.blacklist }}</textarea>
+      </details>
       <textarea
         class="linksList"
         @input="
@@ -65,7 +77,11 @@ function formatPosts() {
   const links = {}
   const processedLinks = []
   const duplicateLinks = []
+  const blacklisted = []
   const rows = settingsStore.inputText.split('\n')
+  const blacklist = settingsStore.blacklist.split('\n').map((row)=>{
+    return row.match(linkRegExp)?.groups.link ?? { undefined }
+  })
   let lastNotes = null
   let lastPhotoPositions = null
 
@@ -77,6 +93,10 @@ function formatPosts() {
     const rowPhotoPositions = row.match(photosPositionRegExp)
 
     if (link) {
+      if (blacklist.indexOf(link) >=0) {
+        blacklisted.push(row);
+        continue;
+      }
       if (!links[link] && !processedLinks.includes(link)) {
         links[link] = `https://t.me/${link} ${(rowNotes ?? lastNotes ?? defaultNotes.value ?? []).join(', ')} ${(
           rowPhotoPositions ??
@@ -113,12 +133,17 @@ function formatPosts() {
   }
 
   settingsStore.inputText = `${Object.values(links).join('\n')}\n\n${duplicateLinks.join('\n')}`
+  if(blacklisted.length > 0)
+    settingsStore.inputText += '\n// Черный список:\n'+blacklisted.map((row) => "// "+row).join('\n')
   textareaKey.value++
 }
 
 async function fetchPosts() {
   const linksObject = {}
   const rows = settingsStore.inputText.split('\n')
+  const blacklist = settingsStore.blacklist.split('\n').map((row)=>{
+    return row.match(linkRegExp)?.groups.link ?? { undefined }
+  })
 
   for (const row of rows) {
     failedPosts.value = []
@@ -128,7 +153,7 @@ async function fetchPosts() {
     let fetchPhotos = false
     let photosPositions = []
 
-    if (link) {
+    if (link && blacklist.indexOf(link) < 0) {
       const [channelName, postId] = link.split('/')
       const rawNotes = row?.match(notesRegExp)
       const indexOfPhotoNote = rawNotes?.indexOf(settingsStore.photoNote) ?? -1
@@ -192,7 +217,7 @@ function debounce(fn, timeout) {
   }
 }
 
-function saveSettings(mutation, { inputText, notes, photoNote, defaultNotes }) {
+function saveSettings(mutation, { inputText, notes, photoNote, defaultNotes, blacklist }) {
   fetch('http://localhost:8083/settings', {
     method: 'POST',
     headers: {
@@ -202,7 +227,8 @@ function saveSettings(mutation, { inputText, notes, photoNote, defaultNotes }) {
       inputText,
       notes,
       photoNote,
-      defaultNotes
+      defaultNotes,
+      blacklist
     })
   })
   isSettingsSaving.value = false
@@ -240,6 +266,20 @@ settingsStore.$subscribe(debounce(saveSettings, 3000))
   margin-bottom: 8px;
   resize: vertical;
   font-size: 12px;
+}
+
+.blacklistDetails
+{
+  width: 100%;
+  margin-bottom: 8px;
+  resize: vertical;
+}
+
+.blacklist {
+  width: 100%;
+  height: 200px;
+  font-size: 12px;
+  resize: vertical;
 }
 
 .fetchButton {
