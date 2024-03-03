@@ -111,8 +111,9 @@ function formatPosts() {
       lastPhotoPositions = rowPhotoPositions
     }
   }
-
-  settingsStore.inputText = `${Object.values(links).join('\n')}\n\n${duplicateLinks.join('\n')}`
+  const duplicateLinksUnique = [...new Set(duplicateLinks)];
+  
+  settingsStore.inputText = `${Object.values(links).join('\n')}\n\n${duplicateLinksUnique.join('\n')}`
   textareaKey.value++
 }
 
