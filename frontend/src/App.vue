@@ -131,11 +131,12 @@ function formatPosts() {
       lastPhotoPositions = rowPhotoPositions
     }
   }
-
-  settingsStore.inputText = `${Object.values(links).join('\n')}\n\n${duplicateLinks.join('\n')}`
+  const duplicateLinksUnique = [...new Set(duplicateLinks)];
+  
+  settingsStore.inputText = `${Object.values(links).join('\n')}\n\n${duplicateLinksUnique.join('\n')}`
   if(blacklisted.length > 0)
     settingsStore.inputText += '\n// Черный список:\n'+blacklisted.map((row) => "// "+row).join('\n')
-  textareaKey.value++
+textareaKey.value++
 }
 
 async function fetchPosts() {
