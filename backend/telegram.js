@@ -12,6 +12,7 @@ const {
 const { StringSession } = require('telegram/sessions');
 const input = require('input');
 const { NewMessage, NewMessageEvent } = require('telegram/events');
+const { ConnectionTCPObfuscated } = require('telegram/network');
 
 let client = {};
 
@@ -38,6 +39,8 @@ let client = {};
 
   client = new TelegramClient(sessionString, Number(apiId), apiHash, {
     connectionRetries: 5,
+    // connection: ConnectionTCPObfuscated,
+    useWSS: true,
   });
   client.setLogLevel('error');
   if (settings.botToken) {
