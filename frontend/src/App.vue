@@ -155,8 +155,11 @@ async function fetchPosts() {
     let photosPositions = []
 
     if (link && blacklist.indexOf(link) < 0) {
+      // делим ссылку на канал и номер
       const [channelName, postId] = link.split('/')
       const rawNotes = row?.match(notesRegExp)
+      
+      // находим номер индекса фото в строке
       const indexOfPhotoNote = rawNotes?.indexOf(settingsStore.photoNote) ?? -1
 
       if (indexOfPhotoNote !== -1) {
@@ -165,6 +168,7 @@ async function fetchPosts() {
         photosPositions = row.match(photosPositionRegExp) ?? []
       }
 
+      // Заменяем before на after
       const notes =
         rawNotes?.map((note) => {
           const { after } = settingsStore.notes.find(({ before }) => note === before) ?? {}
