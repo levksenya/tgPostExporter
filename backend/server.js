@@ -184,7 +184,7 @@ async function formatPost(rawPost, fullLink, fetchPhotos, notes, rawNotes, photo
       if (fwdFrom.fromId.className === 'PeerChannel') {
         const fwdChannelId = Number(fwdFrom.fromId.channelId);
 
-        if (otherChats) {
+        if (otherChats && otherChats.length > 0) {
           const { title } = otherChats.filter(({ id }) => id == fwdChannelId)[0];
 
           forwardedFrom = title;
