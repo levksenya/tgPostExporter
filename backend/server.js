@@ -226,14 +226,38 @@ async function fetchPosts({ linksList, folderName }) {
       continue;
     }
 
-    let postIds;
+    let rawPost, prevRawPost;
+    let id = Number(postId)
+    while (true) {
+      let postIds
 
-    // Форматируем id постов
-    if (photosPositions.length > 0) postIds = [Number(postId), ...photosPositions.map((position) => Number(postId) + Number(position) - 1)];
-    else postIds = [Number(postId)];
+      // Форматируем id постов
+      if (photosPositions.length > 0) postIds = [id, ...photosPositions.map((position) => id + Number(position) - 1)];
+      else postIds = [id];
+      
+      // Получаем пост из телеграма
+      rawPost  = await getPosts(channelName, postIds);
+      if (!rawPost) {
+        if (prevRawPost) rawPost = prevRawPost 
+        break
+      }
 
-    // Получаем пост из телеграма
-    const rawPost = await getPosts(channelName, postIds, fullLink);
+      firstMessage = rawPost.messages[0];
+      if (prevRawPost && prevRawPost.messages[0].groupedId.value !== firstMessage.groupedId.value) {
+        // поменялся groupedId вернемся
+        rawPost = prevRawPost
+        break
+      }
+
+      if (firstMessage.photo && !firstMessage.message && firstMessage.groupedId) {
+        prevRawPost = rawPost
+        // смотрим выше
+        id--
+        continue
+      }
+
+      break
+    }
 
     if (!rawPost) {
       failedPosts.push({

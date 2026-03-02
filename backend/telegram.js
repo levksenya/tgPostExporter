@@ -78,7 +78,7 @@ exports.getPhoto = async ({ id, accessHash, fileReference, dcId }, folderName) =
   } catch {}
 };
 
-exports.getPosts = async (channelName, postIds, fullLink) => {
+exports.getPosts = async (channelName, postIds) => {
   try {
     const post = await client.invoke(
       new GetMessages({
